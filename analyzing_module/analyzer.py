@@ -4,6 +4,7 @@ import time
 import numpy as np
 import threading
 import cv2
+from facedetection import FaceDetection
 
 
 class Analyzer(threading.Thread):
@@ -14,13 +15,10 @@ class Analyzer(threading.Thread):
         self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.model = FaceDetection()
 
     def process(self, frame: np.array):
-        cv2.rectangle(frame,
-                      (int(frame.shape[1]/3), int(frame.shape[0]/3)),
-                      (int(frame.shape[1]*2/3), int(frame.shape[0]*2/3)),
-                      (0, 0, 255))
-        return frame
+        return self.model.extract_face(frame)
 
     def run(self):
         # time.sleep(1000)
