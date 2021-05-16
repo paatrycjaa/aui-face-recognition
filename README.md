@@ -3,10 +3,15 @@
 
 ### Face detection
 ```
-conda create --name face python=3.7.10
-conda activate face
-conda install -c anaconda opencv
-pip install tensorflow==2.2
-pip install git+https://github.com/rcmalli/keras-vggface.git
+python3 -m venv /venv
+source venv/bin/activate
+pip install tensorflow
 pip install mtcnn
+pip install git+https://github.com/rcmalli/keras-vggface.git
+pip install keras-applications
+```
+If problem : module 'tensorflow.python.keras.utils.generic_utils' has no attribute 'populate_dict_with_module_objects'
+```
+pip uninstall tf-nightly
+pip install tensorflow --upgrade --force-reinstall
 ```
