@@ -17,4 +17,6 @@ pip uninstall tf-nightly
 pip install tensorflow --upgrade --force-reinstall
 ```
 ### Run
+```
 python3 facedetection.py
+```
