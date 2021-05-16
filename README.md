@@ -3,7 +3,7 @@
 
 ### Face detection
 ```
-python3 -m venv /venv
+python3 -m venv /venv   (python 3.8.5 working)
 source venv/bin/activate
 pip install tensorflow
 pip install mtcnn
