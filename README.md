@@ -3,6 +3,7 @@
 
 ### Face detection
 ```
+cd analyzing_module
 python3 -m venv /venv   (python 3.8.5 working)
 source venv/bin/activate
 pip install tensorflow
@@ -15,3 +16,5 @@ If problem : module 'tensorflow.python.keras.utils.generic_utils' has no attribu
 pip uninstall tf-nightly
 pip install tensorflow --upgrade --force-reinstall
 ```
+### Run
+python3 facedetection.py
