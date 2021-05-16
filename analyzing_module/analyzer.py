@@ -15,7 +15,7 @@ class Analyzer(threading.Thread):
         self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.model = FaceDetection()
+        self.model = FaceDetection(opencv=True, identification=False)
 
     def process(self, frame: np.array):
         return self.model.extract_face(frame)
