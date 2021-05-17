@@ -8,12 +8,12 @@ class FrameBuffer:
         self.buffer_size = size
 
     def update(self, frame):
-        self.buffer[self.pointer, :, :, :] = frame
         self.pointer += 1
         if self.pointer >= self.buffer_size:
             self.pointer = 0
+        self.buffer[self.pointer, :, :, :] = frame
 
-    def get(self, frames_ago):
+    def __getitem__(self, frames_ago):
         if frames_ago > self.buffer_size:
             raise ValueError(f"Can only return last {self.buffer_size} frames")
         return self.buffer[self.pointer-frames_ago]

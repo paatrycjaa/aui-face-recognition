@@ -20,11 +20,7 @@ class Analyzer(threading.Thread):
 
     def process(self, frame: np.array):
         self.buffer.update(frame)
-        # return frame
-        #frame = 0 * frame
-        #frame = frame + self.buffer[self.current_element-1, :, :, :]
-        return self.buffer.get(30)
-        #return self.model.extract_face(self.buffer[self.current_element-30])
+        return self.model.extract_face(self.buffer[0])
         #return (self.buffer[self.current_element] + self.buffer[self.current_element-30])/2
 
     def run(self):
