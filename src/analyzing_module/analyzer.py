@@ -5,7 +5,7 @@ import numpy as np
 import threading
 import cv2
 from facedetection import FaceDetection
-
+from src.analyzing_module.frame_buffer import FrameBuffer
 
 class Analyzer(threading.Thread):
     def __init__(self, url):
@@ -16,9 +16,16 @@ class Analyzer(threading.Thread):
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.model = FaceDetection(opencv=True, identification=False)
+        self.buffer = FrameBuffer(100, self.height, self.width, 3)
 
     def process(self, frame: np.array):
-        return self.model.extract_face(frame)
+        self.buffer.update(frame)
+        # return frame
+        #frame = 0 * frame
+        #frame = frame + self.buffer[self.current_element-1, :, :, :]
+        return self.buffer.get(30)
+        #return self.model.extract_face(self.buffer[self.current_element-30])
+        #return (self.buffer[self.current_element] + self.buffer[self.current_element-30])/2
 
     def run(self):
         # time.sleep(1000)
@@ -54,7 +61,7 @@ class Analyzer(threading.Thread):
 
 
 if __name__ == "__main__":
-    analyzer = Analyzer(url='rtmp://localhost/live/test')
+    analyzer = Analyzer(url='rtmp://localhost/live/1')
     analyzer.run()
     # analyzer.join()
     print("nic")
