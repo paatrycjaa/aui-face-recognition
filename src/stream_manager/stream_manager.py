@@ -8,6 +8,7 @@ from time import sleep
 import cv2
 import redis
 import librtmp
+import copy
 
 
 def make_analysed_url(source_url):
@@ -39,12 +40,15 @@ class StreamManager:
         }
 
     def update_urls(self):
-        urls = self.db.scan_iter() if self.use_db else self.source_urls
+        urls = self.db.scan_iter() if self.use_db else copy.deepcopy(self.source_urls)
         for source_url in urls:
             if self.check_url(source_url):
                 self.source_urls[source_url]['last_online'] = datetime.datetime.now()
-                if not self.check_url(make_analysed_url(source_url)):
+                if self.check_url(make_analysed_url(source_url)):
+                    self.source_urls[source_url]['last_analysis'] = datetime.datetime.now()
+                else:
                     self.publish_source_url(source_url)
+
             else:
                 if datetime.datetime.now()-self.source_urls[source_url]['last_online'] > \
                         datetime.timedelta(seconds=self.remove_after):
@@ -83,7 +87,10 @@ class StreamManager:
         return True
 
     def publish_source_url(self, source_url):
-        requests.post(self.analyzer_url + 'analyze', data={'url': source_url})
+        try:
+            requests.post(self.analyzer_url + 'analyze', data={'url': source_url})
+        except:
+            logger.warning("Analyzer API off line")
         pass
 
     def submit_stream(self):

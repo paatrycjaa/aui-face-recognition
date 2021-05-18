@@ -3,7 +3,7 @@ from flask_restx import Resource, Api
 import threading
 import time
 
-from src.stream_manager.stream_manager import StreamManager
+from stream_manager import StreamManager
 
 app = Flask(__name__)
 stream_manager = StreamManager()

@@ -6,7 +6,7 @@ import numpy as np
 import threading
 import cv2
 from facedetection import FaceDetection
-from src.analyzing_module.frame_buffer import FrameBuffer
+from frame_buffer import FrameBuffer
 from time_series import TimeSeries
 
 FPS = 30
@@ -93,6 +93,7 @@ class Analyzer(threading.Thread):
 
             # write to pipe
             p.stdin.write(self.process(frame).tobytes())
+        p.kill()
 
 
 if __name__ == "__main__":
