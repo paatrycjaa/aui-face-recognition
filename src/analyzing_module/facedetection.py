@@ -14,7 +14,8 @@ class FaceDetection:
         self.identification = identification
         if self.opencv:
             self.detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-        else : self.detector = mtcnn.MTCNN()
+        else:
+            self.detector = mtcnn.MTCNN()
         self.classificator = VGGFace(model='resnet50')
 
     def get_embedding(self, faces):
@@ -24,19 +25,13 @@ class FaceDetection:
             prediction = self.classificator.predict(face)
             print('Predicted:', decode_predictions(prediction))
 
-    
-    def extract_face(self, frame, required_size =(224,224)):
-        print("Start detecting")
-        results = None
-        if self.opencv: 
-            results = self.detector.detectMultiScale(frame)
-        else : results = self.detector.detect_faces(frame)
-        print("Stop detecting")
-
+    def draw_bounding_boxes(self, frame, results):
+        if results is None:
+            return
         for result in results:
-            if self.opencv: 
+            if self.opencv:
                 x1, y1, width, height = result
-            else : 
+            else:
                 x1 = result['box'][0]
                 y1 = result['box'][1]
                 width = result['box'][2]
@@ -44,20 +39,45 @@ class FaceDetection:
 
             x2 = x1 + width
             y2 = y1 + height
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255))
 
-            cv2.rectangle(frame,(x1, y1),(x2, y2),(0, 0, 255))
-            face = cv2.resize(frame[y1:y2, x1:x2], required_size)
+    def extract_face(self, frame, required_size =(224,224)):
+        results = self.find_faces(frame)
+        self.draw_bounding_boxes(frame, results)
+        if self.identification:
+            for result in results:
+                if self.opencv:
+                    x1, y1, width, height = result
+                else:
+                    x1 = result['box'][0]
+                    y1 = result['box'][1]
+                    width = result['box'][2]
+                    height = result['box'][3]
 
-            if self.identification :
-                print("Start classifying")
-                face = face.astype('float32')
-                face = np.expand_dims(face, axis=0)           
-                face = preprocess_input(face)
-                prediction = self.classificator.predict(face)
-                print('Predicted:', decode_predictions(prediction))
-
-
+                x2 = x1 + width
+                y2 = y1 + height
+                face = cv2.resize(frame[y1:y2, x1:x2], required_size)
+                recognized_face = self.recognize_face(face)
         return frame
+
+    def find_faces(self, frame):
+        print("Start detecting")
+        if self.opencv: 
+            results = self.detector.detectMultiScale(frame)
+        else:
+            results = self.detector.detect_faces(frame)
+        print("Stop detecting")
+        return results
+
+    def recognize_face(self, face):
+        print("Start recognizing")
+        print("Start classifying")
+        face = face.astype('float32')
+        face = np.expand_dims(face, axis=0)
+        face = preprocess_input(face)
+        prediction = self.classificator.predict(face)
+        print('Predicted:', decode_predictions(prediction))
+        return decode_predictions(prediction)
 
 
 
