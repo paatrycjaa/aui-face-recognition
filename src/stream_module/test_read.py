@@ -5,7 +5,7 @@ import cv2
 
 time = datetime.datetime.now()
 
-cap = cv2.VideoCapture('rtmp://localhost/live/2', timeout=2)
+cap = cv2.VideoCapture('rtmp://localhost/live/1')
 print(datetime.datetime.now()-time)
 
 while True:

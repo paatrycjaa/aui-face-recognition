@@ -12,7 +12,7 @@ import copy
 
 
 def make_analysed_url(source_url):
-    return source_url + "_analysed"
+    return source_url + "_a"
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,9 @@ class StreamManager:
         self.base_url = 'rtmp://localhost/live/'
         self.analyzer_url = 'http://127.0.0.1:5000/'
         self.interval = 5
-        self.remove_after = 60
+        self.remove_after = 20
+        self.update_worker = None
+        self.do_update = True
 
     @staticmethod
     def create_url_status(last_online, last_analysis=None):
@@ -88,7 +90,9 @@ class StreamManager:
 
     def publish_source_url(self, source_url):
         try:
-            requests.post(self.analyzer_url + 'analyze', data={'url': source_url})
+            requests.post(self.analyzer_url + 'analyze',
+                          data={'url': source_url,
+                                'url_analyzed': make_analysed_url(source_url)})
         except:
             logger.warning("Analyzer API off line")
         pass
@@ -106,11 +110,15 @@ class StreamManager:
         return url
 
     def run(self):
-        while 1:
+        while self.do_update:
             print('updating')
             self.update_urls()
             sleep(self.interval)
 
     def start(self):
-        thread = threading.Thread(target=self.run)
-        thread.start()
+        self.update_worker = threading.Thread(target=self.run)
+        self.update_worker.start()
+
+    def __del__(self):
+        self.do_update = False
+

@@ -10,7 +10,8 @@ from frame_buffer import FrameBuffer
 from time_series import TimeSeries
 
 FPS = 30
-DELAY = 1
+DELAY = 3
+
 
 class Analyzer(threading.Thread):
     class Worker:
@@ -39,9 +40,10 @@ class Analyzer(threading.Thread):
             self.thread = threading.Thread(target=self.run)
             self.thread.start()
 
-    def __init__(self, url):
+    def __init__(self, url, analyzed_url):
         super().__init__()
         self.url = url
+        self.analyzed_url = analyzed_url
         self.cap = cv2.VideoCapture(self.url)
         self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -78,7 +80,7 @@ class Analyzer(threading.Thread):
                    '-pix_fmt', 'yuv420p',
                    '-preset', 'ultrafast',
                    '-f', 'flv',
-                   f'{self.url}_analyzed']
+                   f'{self.analyzed_url}']
 
         # using subprocess and pipe to fetch frame data
         p = subprocess.Popen(command, stdin=subprocess.PIPE)
