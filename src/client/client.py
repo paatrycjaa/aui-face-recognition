@@ -118,8 +118,9 @@ class Client:
                     frame = cv2.resize(cap.frame, (frame_width, frame_height))
                     pad_height = (block_height - frame_height)//2
                     pad_width = (block_width - frame_width) // 2
-                    display[coord_y*block_height + pad_height:coord_y*block_height + pad_height + frame_height,
-                          coord_x*block_width + pad_width: coord_x*block_width + pad_width + frame_width] = frame
+                    if frame.shape[0] == block_height and frame.shape[1] == block_width:
+                        display[coord_y*block_height + pad_height:coord_y*block_height + pad_height + frame_height,
+                              coord_x*block_width + pad_width: coord_x*block_width + pad_width + frame_width] = frame
             cv2.imshow("frame", display)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

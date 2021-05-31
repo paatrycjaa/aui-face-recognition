@@ -4,6 +4,7 @@ import time
 import cv2
 import requests
 import subprocess
+import sys
 from typing import Union
 
 
@@ -97,6 +98,11 @@ class Streamer:
                     break
             time.sleep(max(1 / fps - (datetime.datetime.now() - start_time).microseconds / 1000000, 0))
 
-s = Streamer("http://localhost:5001", display=True, capture_device='../output.mp4')
-s.stream()
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        filename = '../output.mp4'
+    s = Streamer("http://localhost:5001", display=True, capture_device=filename)
+    s.stream()
 #s.stream_file('../output.mp4')
