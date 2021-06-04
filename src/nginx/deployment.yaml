@@ -17,4 +17,7 @@ spec:
         image: pawelzakieta/aui:nginx-rtmp
         ports:
         - containerPort: 80
+          name: http
+        - containerPort: 1935
+          name: rtmp
         imagePullPolicy: Always
