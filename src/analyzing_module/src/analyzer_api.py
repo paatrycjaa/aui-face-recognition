@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_restx import Resource, Api, reqparse
-
 from analyzer import Analyzer
 
 app = Flask(__name__)
@@ -26,6 +25,11 @@ class Analyze(Resource):
         analyzer.start()
         return True
 
+@api.route('/status/')
+class Status(Resource):
+    def get(self):
+        return "online"
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000)

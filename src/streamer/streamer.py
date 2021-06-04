@@ -14,12 +14,14 @@ class Streamer:
         self.stream_url = None
         self.capture_device = capture_device
         self.cap = cv2.VideoCapture(capture_device)
+        self.rtmp_url = "rtmp://192.168.49.2:30000/live/"
         self.stream_url = self.get_stream_url()
         self.display = display
 
     def get_stream_url(self):
         response = requests.post(self.manager_url + "/streams")
-        return response.content.decode('utf-8').strip().replace('"', '')
+        sub_url = response.content.decode('utf-8').strip().replace('"', '')
+        return self.rtmp_url + sub_url
 
     def stream(self):
         if isinstance(self.capture_device, int):
@@ -103,6 +105,6 @@ if __name__ == '__main__':
         filename = sys.argv[1]
     else:
         filename = '../output.mp4'
-    s = Streamer("http://localhost:5001", display=True, capture_device=filename)
+    s = Streamer("http://192.168.49.2:30002/", display=True, capture_device=filename)
     s.stream()
 #s.stream_file('../output.mp4')

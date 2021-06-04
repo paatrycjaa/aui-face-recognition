@@ -1,12 +1,10 @@
 import datetime
 
-import numpy as np
+import random
 import requests
 import threading
 import logging
 from time import sleep
-import cv2
-import redis
 import librtmp
 import copy
 
@@ -24,10 +22,11 @@ class StreamManager:
         self.analyzed_urls = {}
         self.use_db = use_db
         if use_db:
-            self.db = redis.Redis('localhost', port=6379, db=0)
+            pass
+            # self.db = redis.Redis('localhost', port=6379, db=0)
         else:
             self.db = None
-        self.base_url = 'rtmp://localhost/live/'
+        self.rtmp_url = 'rtmp://localhost/live/'
         self.analyzer_url = 'http://127.0.0.1:5000/'
         self.interval = 5
         self.remove_after = 20
@@ -58,9 +57,9 @@ class StreamManager:
 
     def get_stream_urls(self):
         if self.use_db:
-            return list(map(lambda url: url.decode('utf-8'), self.db.scan_iter()))
+            return list(map(lambda url: url.decode('utf-8').split('/')[-1], self.db.scan_iter()))
         else:
-            return self.source_urls
+            return {key.split('/')[-1]: data for key, data in self.source_urls.items()}
 
     def _add_stream_url(self, url):
         if self.use_db:
@@ -83,9 +82,12 @@ class StreamManager:
             stream = conn.create_stream()
             data = stream.read(1)
             if not data:
+                logger.warning(f"unavailable stream {url}")
                 return False
         except librtmp.exceptions.RTMPError as e:
+            logger.warning(f"unavailable stream {url}")
             return False
+        logger.info(f"available stream {url}")
         return True
 
     def publish_source_url(self, source_url):
@@ -94,29 +96,36 @@ class StreamManager:
                           data={'url': source_url,
                                 'url_analyzed': make_analysed_url(source_url)})
         except:
-            logger.warning("Analyzer API off line")
+            logger.warning("Analyzer API offline")
         pass
 
+    def check_analyzer_status(self):
+        try:
+            result = requests.get(self.analyzer_url + 'status')
+            logger.info("Analyzer API online")
+        except:
+            logger.warning("Analyzer API offline")
+
     def submit_stream(self):
-        seed = np.random.randint(1000)
+        seed = random.randint(0, 1000)
         seed = 1
-        url = f'{self.base_url}{seed}'
-        while url in self.get_stream_urls():
-            seed = np.random.randint(1000)
-            url = f'{self.base_url}{seed}'
+        url = f'{self.rtmp_url}{seed}'
+        while url in self.source_urls:
+            seed = random.randint(0, 1000)
+            url = f'{self.rtmp_url}{seed}'
         # TODO: to cos nie dziala, cos z watkami sie pewnie pieprzy, cza naprawic
         self._add_stream_url(url)
         # requests.post(self.analyzer_url+'analyze', data={'url': url})
-        return url
+        return seed
 
     def run(self):
         while self.do_update:
-            print('updating')
+            self.check_analyzer_status()
             self.update_urls()
             sleep(self.interval)
 
     def start(self):
-        self.update_worker = threading.Thread(target=self.run)
+        self.update_worker = threading.Thread(target=self.run, daemon=True)
         self.update_worker.start()
 
     def __del__(self):

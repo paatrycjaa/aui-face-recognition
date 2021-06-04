@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: analyzer
+  labels:
+    run: analyzer
+spec:
+  type: NodePort
+  ports:
+  - port: 5000
+    name: http
+    targetPort: 5000
+    nodePort: 30003
+    protocol: TCP
+  selector:
+    run: analyzer

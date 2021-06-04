@@ -1,6 +1,5 @@
 import datetime
 import subprocess
-import time
 
 import numpy as np
 import threading
@@ -37,7 +36,7 @@ class Analyzer(threading.Thread):
             return self.thread.is_alive()
 
         def start(self):
-            self.thread = threading.Thread(target=self.run)
+            self.thread = threading.Thread(target=self.run, daemon=True)
             self.thread.start()
 
     def __init__(self, url, analyzed_url):
