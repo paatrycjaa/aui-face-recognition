@@ -10,7 +10,7 @@ from frame_buffer import FrameBuffer
 from time_series import TimeSeries
 
 FPS = 30
-DELAY = 3
+DELAY = 0.5
 
 
 class Analyzer(threading.Thread):

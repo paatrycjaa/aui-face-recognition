@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-rtmp
+spec:
+  selector:
+    matchLabels:
+      run: nginx-rtmp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: nginx-rtmp
+    spec:
+      containers:
+      - name: nginx-rtmp
+        image: pawelzakieta/aui:nginx-rtmp
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
