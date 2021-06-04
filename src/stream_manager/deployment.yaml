@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-manager
+spec:
+  selector:
+    matchLabels:
+      run: stream-manager
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: stream-manager
+    spec:
+      containers:
+      - name: stream-manager
+        image: pawelzakieta/aui:stream-manager
+        command: ["python3"]
+        args: ["manager_api.py", "rtmp://nginx-rtmp:1935/live/", "http://analyzer:5000/"]
+        ports:
+        - containerPort: 5001
+          name: http
+        imagePullPolicy: Always

@@ -18,7 +18,7 @@ class Analyze(Resource):
         args = parser.parse_args()
         url = args['url']
         analyzed_url = args['url_analyzed']
-        if url in [analyzer.url for analyzer in analyzers]:
+        if url in [analyzer.url for analyzer in analyzers if analyzer.is_alive()]:
             return True
         analyzer = Analyzer(url, analyzed_url)
         analyzers.append(analyzer)

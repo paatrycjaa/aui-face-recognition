@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stream-manager
+  labels:
+    run: stream-manager
+spec:
+  type: NodePort
+  ports:
+  - port: 5001
+    name: http
+    targetPort: 5001
+    nodePort: 30002
+    protocol: TCP
+  selector:
+    run: stream-manager
