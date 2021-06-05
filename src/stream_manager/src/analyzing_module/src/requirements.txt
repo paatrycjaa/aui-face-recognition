@@ -1,0 +1,4 @@
+Flask~=1.1.2
+flask-restx
+requests~=2.25.1
+python-librtmp

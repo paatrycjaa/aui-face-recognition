@@ -105,6 +105,6 @@ if __name__ == '__main__':
         filename = sys.argv[1]
     else:
         filename = '../output.mp4'
-    s = Streamer("http://192.168.49.2:30002/", display=True, capture_device=filename)
+    s = Streamer("http://0.0.0.0:5001/", display=True, capture_device=filename)
     s.stream()
 #s.stream_file('../output.mp4')

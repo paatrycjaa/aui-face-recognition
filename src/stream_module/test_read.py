@@ -1,11 +1,9 @@
 import datetime
-
-import numpy as np
 import cv2
 
 time = datetime.datetime.now()
 
-cap = cv2.VideoCapture('rtmp://localhost/live/1')
+cap = cv2.VideoCapture('rtmp://192.168.49.2:30000/live/1')
 print(datetime.datetime.now()-time)
 
 while True:

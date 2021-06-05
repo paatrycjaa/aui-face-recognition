@@ -1,6 +1,6 @@
 import datetime
 import subprocess
-
+import pika
 import numpy as np
 import threading
 import cv2
@@ -10,6 +10,23 @@ from time_series import TimeSeries
 
 FPS = 30
 DELAY = 0.5
+
+
+class DetectionResult:
+    def __init__(self, src_url:str = None, time:datetime.datetime = None, results: list = None):
+        self.src_url = src_url
+        self.timestamp = time
+        self.results = results
+        self.delimiter = ';'
+
+    def __str__(self):
+        return self.delimiter.join([self.src_url, str(self.timestamp), str(self.results)])
+
+    def decode(self, string: str):
+        string = string.split(self.delimiter)
+        self.src_url = string[0]
+        self.timestamp = datetime.datetime.fromisoformat(string[1])
+        self.results = eval(string[2])
 
 
 class Analyzer(threading.Thread):
@@ -27,7 +44,8 @@ class Analyzer(threading.Thread):
             self.frame = frame
 
         def run(self):
-            self.results.update(self.model.find_faces(self.frame))
+            time = datetime.datetime.now()
+            self.results.update(self.model.find_faces(self.frame), time)
             self.finished = datetime.datetime.now()
 
         def is_running(self):

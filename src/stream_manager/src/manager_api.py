@@ -2,9 +2,14 @@ from flask import Flask, jsonify
 from flask_restx import Resource, Api
 import sys
 from stream_manager import StreamManager, make_analysed_url
+import json
 
 app = Flask(__name__)
 stream_manager = StreamManager()
+with open('config.json') as f:
+    config = json.load(f)
+    stream_manager.rtmp_url = config['rtmp_url']
+
 api = Api(app)
 
 
@@ -13,14 +18,7 @@ class Manager(Resource):
     def get(self):
         # stream_manager.update_urls()
         result = stream_manager.get_stream_urls()
-        return jsonify([
-            {
-                'source_url': source_url,
-                'analyzed_url': make_analysed_url(source_url),
-                'last_online': str(data['last_online']),
-                'last_analysis': str(data['last_analysis']) if data['last_analysis'] is not None else None
-            } for source_url, data in result.items()
-        ])
+        return jsonify(result)
 
     def post(self):
         return jsonify(stream_manager.submit_stream())

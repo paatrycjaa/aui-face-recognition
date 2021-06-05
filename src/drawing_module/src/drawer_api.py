@@ -1,29 +1,31 @@
 from flask import Flask
 from flask_restx import Resource, Api, reqparse
-from analyzer import Analyzer
+from drawer import Drawer
 
 app = Flask(__name__)
 api = Api(app)
 #
 parser = reqparse.RequestParser()
 parser.add_argument('url', type=str, help='stream url')
-parser.add_argument('url_analyzed', type=str, help='url where to send analyzed stream')
-analyzers = []
+parser.add_argument('output_url', type=str, help='url where to send analyzed stream')
+drawers = []
 
 
-@api.route('/analyze/')
+@api.route('/draw/')
 class Analyze(Resource):
     @api.expect(parser)
     def post(self):
         args = parser.parse_args()
         url = args['url']
-        analyzed_url = args['url_analyzed']
-        if url in [analyzer.url for analyzer in analyzers if analyzer.is_alive()]:
+        analyzed_url = args['output_url']
+        if url in [drawer.source_url for drawer in drawers if drawer.is_alive()]:
             return True
-        analyzer = Analyzer(url, analyzed_url)
-        analyzers.append(analyzer)
-        analyzer.start()
+        drawer = Drawer(url, analyzed_url)
+        drawer.start_consume()
+        drawers.append(drawer)
+        drawer.start()
         return True
+
 
 @api.route('/status/')
 class Status(Resource):
@@ -32,4 +34,4 @@ class Status(Resource):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5004)

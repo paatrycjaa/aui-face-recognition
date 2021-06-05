@@ -10,7 +10,7 @@ class TimeSeries:
     def update(self, value, time=None):
         if time is None:
             time = datetime.datetime.now()
-            self.data[time] = value
+        self.data[time] = value
 
     def get_timestamps(self):
         return list(self.data.keys())

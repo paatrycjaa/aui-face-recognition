@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analyzer
+spec:
+  selector:
+    matchLabels:
+      run: analyzer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: analyzer
+    spec:
+      containers:
+      - name: analyzer
+        image: pawelzakieta/aui:stream-manager
+        command: [ "celery" ]
+          args: [ "-A",  "analyzing_module.analyzer", "worker", "--loglevel=INFO"]
+        ports:
+        - containerPort: 5000
+          name: http
+        imagePullPolicy: Always

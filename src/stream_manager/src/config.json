@@ -1,0 +1,6 @@
+{
+  "rtmp_url": "rtmp://192.168.49.2:30000/live/",
+  "broker_url": "192.168.49.2",
+  "broker_port": 30762,
+  "drawer_url": "http://127.0.0.1:5004"
+}
