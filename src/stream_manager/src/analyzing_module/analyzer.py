@@ -82,6 +82,17 @@ class Analyzer(threading.Thread):
 
 @app.task(bind=True)
 def analyze(self, source_url, broker_url, broker_port):
+    """
+    performs analysis on stream available under source_url and sends results to broker_url
+    Args:
+        self:
+        source_url:
+        broker_url:
+        broker_port:
+
+    Returns:
+
+    """
     analyzer = Analyzer(source_url=source_url)
     analyzer.broker_url = broker_url
     analyzer.broker_port = broker_port

@@ -42,6 +42,10 @@ class StreamCapture:
         self.thread.start()
 
 
+def make_analysed_url(source_url):
+    return source_url + "_a"
+
+
 class Client:
     def __init__(self, manager_url):
         self.manager_url = manager_url
@@ -59,13 +63,13 @@ class Client:
         response = json.loads(response.content)
         result = []
         for stream in response:
-            status = StreamState.ONLINE if stream['last_analysis'] is not None and \
+            status = StreamState.ONLINE if stream['last_output_online'] != 'None' and \
                 datetime.datetime.fromisoformat(stream['last_online']) -\
-                datetime.datetime.fromisoformat(stream['last_analysis']) < \
+                datetime.datetime.fromisoformat(stream['last_output_online']) < \
                 datetime.timedelta(seconds=5) else StreamState.OFFLINE
             result.append((
                 stream['source_url'],
-                stream['analyzed_url'],
+                make_analysed_url(stream['source_url']),
                 status
             ))
         return result
@@ -90,7 +94,6 @@ class Client:
                 cap = StreamCapture(analyzed_url, tag="SOURCE")
                 cap.start()
                 self.caps.append(cap)
-
 
     def run(self):
         def run_update_caps():
@@ -124,6 +127,7 @@ class Client:
             cv2.imshow("frame", display)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
     def __del__(self):
         for cap in self.caps:
             cap.consume = False

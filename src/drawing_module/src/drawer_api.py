@@ -19,6 +19,7 @@ class Analyze(Resource):
         url = args['url']
         analyzed_url = args['output_url']
         if url in [drawer.source_url for drawer in drawers if drawer.is_alive()]:
+            print("ALREADY DRAWING (APPARENTLY)")
             return True
         drawer = Drawer(url, analyzed_url)
         drawer.start_consume()

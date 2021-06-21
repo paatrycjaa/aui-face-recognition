@@ -48,7 +48,7 @@ class Drawer(threading.Thread):
         if results is None:
             return
         for result in results:
-            x1, y1, width, height = result
+            x1, y1, width, height, name = result
             x2 = x1 + width
             y2 = y1 + height
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255))

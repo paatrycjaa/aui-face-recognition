@@ -67,7 +67,7 @@ class FaceDetection:
             res = []
             for result in results:
                 x1, y1, width, height = result
-                res.append([x1, y1, width, height])
+                res.append([x1, y1, width, height, "kajtek"])
             results = res
         else:
             results = self.detector.detect_faces(frame)

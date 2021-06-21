@@ -30,9 +30,9 @@ class StreamManager:
         def __dict__(self):
             return {
                 'source_url': self.source_url,
-                'last_online': self.last_online,
-                'last_output_online': self.last_output_online,
-                'analysis_requested': self.analysis_requested,
+                'last_online': str(self.last_online),
+                'last_output_online': str(self.last_output_online),
+                'analysis_requested': str(self.analysis_requested),
                 'last_analysis': self.worker.state
             }
 
