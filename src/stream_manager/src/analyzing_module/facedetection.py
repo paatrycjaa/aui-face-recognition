@@ -8,12 +8,12 @@ import numpy as np
 
 class FaceDetection:
 
-    def __init__(self, opencv = False, identification = True):
+    def __init__(self, opencv = True, identification = True):
         self.detector = None
         self.opencv = opencv
         self.identification = identification
         if self.opencv:
-            self.detector = cv2.CascadeClassifier('analyzing_module/src/haarcascade_frontalface_default.xml')
+            self.detector = cv2.CascadeClassifier('analyzing_module/haarcascade_frontalface_default.xml')
         else:
             self.detector = mtcnn.MTCNN()
         self.classificator = VGGFace(model='resnet50')

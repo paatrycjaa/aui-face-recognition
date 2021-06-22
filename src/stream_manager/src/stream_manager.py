@@ -26,6 +26,7 @@ class StreamManager:
             self.last_online = last_online or datetime.datetime.now()
             self.last_output_online = last_output_online
             self.analysis_requested = datetime.datetime.now()
+            self.last_analysis = None
 
         def __dict__(self):
             return {
@@ -33,7 +34,7 @@ class StreamManager:
                 'last_online': str(self.last_online),
                 'last_output_online': str(self.last_output_online),
                 'analysis_requested': str(self.analysis_requested),
-                'last_analysis': self.worker.state
+                'last_analysis': self.last_analysis
             }
 
     def __init__(self):
@@ -63,26 +64,21 @@ class StreamManager:
             handler = self.get_handler(source_url)
             if self.check_url(source_url):
                 handler.last_online = datetime.datetime.now()
-                try:
-                    last_analysis = datetime.datetime.fromisoformat(handler.worker.state)
-                except ValueError:
-                    last_analysis = handler.analysis_requested
-                if datetime.datetime.now() - last_analysis > datetime.timedelta(seconds=10):
-                    logger.warning(f"Last analysis performed {datetime.datetime.now() - last_analysis} ago")
-                    pass
-                    # self.request_analysis(source_url)
+                if self.check_url(make_analysed_url(source_url)):
+                    handler.last_output_online = datetime.datetime.now()
                 else:
-                    if self.check_url(make_analysed_url(source_url)):
-                        handler.last_output_online = datetime.datetime.now()
-                    else:
-                        self.request_draw(source_url)
+                    self.request_draw(source_url)
             else:
                 if datetime.datetime.now() - handler.last_online > \
                         datetime.timedelta(seconds=self.remove_after):
                     self._remove_stream_url(source_url)
 
-    def get_stream_urls(self):
+    def get_handlers(self):
         return [handler.__dict__() for handler in self.stream_handlers]
+
+    def heartbeat_analysis(self, url):
+        url = f'{self.rtmp_url}{url}'
+        self.get_handler(url).last_analysis = datetime.datetime.now()
 
     def _add_stream_url(self, url, worker):
         self.stream_handlers.append(StreamManager.StreamHandler(url, worker))
@@ -127,12 +123,13 @@ class StreamManager:
         seed = random.randint(0, 1000)
         seed = 1
         url = f'{self.rtmp_url}{seed}'
-        worker = analyzer.analyze.delay(source_url=url,
-                                        broker_url=self.broker_url,
-                                        broker_port=self.broker_port)
+
         while url in self.get_handled_urls():
             seed = random.randint(0, 1000)
             url = f'{self.rtmp_url}{seed}'
+        worker = analyzer.analyze.delay(source_url=url,
+                                        broker_url=self.broker_url,
+                                        broker_port=self.broker_port)
         self._add_stream_url(url, worker)
         return seed
 

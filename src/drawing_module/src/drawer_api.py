@@ -17,6 +17,7 @@ class Analyze(Resource):
     def post(self):
         args = parser.parse_args()
         url = args['url']
+        print(f"REQUESTED DRAW ON {url}")
         analyzed_url = args['output_url']
         if url in [drawer.source_url for drawer in drawers if drawer.is_alive()]:
             print("ALREADY DRAWING (APPARENTLY)")

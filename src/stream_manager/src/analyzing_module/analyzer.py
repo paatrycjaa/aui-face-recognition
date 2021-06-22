@@ -1,12 +1,14 @@
+import copy
 import datetime
 import time
-
+import numpy as np
 import pika
 import threading
 import cv2
 from analyzing_module.facedetection import FaceDetection
 import logging
 from celery import Celery
+import requests
 
 BROKER_URL = '192.168.49.2'
 BROKER_PORT = 30762
@@ -52,36 +54,54 @@ class Analyzer(threading.Thread):
         self.connection = pika.BlockingConnection(parameters=params)
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue=source_url)
+        self.frame = None
+        self.reading = True
+        self.frame_ready = False
 
-    def run(self, worker=None):
+    def run(self):
         i = 0
-        missed_frames = 0
         total_duration = datetime.timedelta(seconds=0)
-        while True:
-            if missed_frames == 30:
+        self.read_continuous()
+        while self.reading:
+            if not self.frame_ready or self.frame.shape[0] < 10:
+                time.sleep(0.01)
+                continue
+            # frame = copy.deepcopy(self.frame)
+            start_time = datetime.datetime.now()
+            # cv2.imshow('frame', self.frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            # while cap.isOpened():
-            ret, frame = self.cap.read()
-            time = datetime.datetime.now()
-            if not ret:
-                print("frame read failed")
-                missed_frames += 1
-                break
-            missed_frames = 0
-            result = DetectionResult(src_url=self.source_url, time=time, results=self.model.find_faces(frame))
-            total_duration += datetime.datetime.now()-time
+            result = DetectionResult(src_url=self.source_url, time=start_time, results=self.model.find_faces(self.frame))
+            total_duration += datetime.datetime.now() - start_time
             self.channel.basic_publish(exchange='', routing_key=self.source_url, body=str(result))
             i += 1
             if i == 30:
-                logger.warning(f'analyzed 30 frames with avg analysis time {total_duration/30}')
+                requests.post(f'http://0.0.0.0:5001/heartbeat/{self.source_url.split("/")[-1]}')
+                logger.warning(f'analyzed 30 frames with avg analysis time {total_duration / 30}')
                 total_duration = datetime.timedelta(seconds=0)
                 i = 0
-                if worker is not None:
-                    worker.update_state(state=f'{str(datetime.datetime.now())}')
+            self.frame_ready = False
+
+    def read_continuous(self):
+        def read():
+            while True:
+                # while cap.isOpened():
+                ret, frame = self.cap.read()
+                self.reading = ret
+                if not ret:
+                    print("frame read failed")
+                    break
+                if not self.frame_ready:
+                    self.frame = frame
+                    self.frame_ready = True
+                else:
+                    pass
+                    #time.sleep(0.01)
+        threading.Thread(target=read, daemon=True).start()
 
 
-@app.task(bind=True)
-def analyze(self, source_url, broker_url, broker_port):
+@app.task
+def analyze(source_url, broker_url, broker_port):
     """
     performs analysis on stream available under source_url and sends results to broker_url
     Args:
@@ -93,10 +113,11 @@ def analyze(self, source_url, broker_url, broker_port):
     Returns:
 
     """
+    logger.error(source_url)
     analyzer = Analyzer(source_url=source_url)
     analyzer.broker_url = broker_url
     analyzer.broker_port = broker_port
-    analyzer.run(self)
+    analyzer.run()
 
 
 if __name__ == "__main__":

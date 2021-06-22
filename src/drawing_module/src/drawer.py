@@ -1,6 +1,8 @@
 import datetime
 import logging
 import subprocess
+import time
+
 import pika
 import numpy as np
 import threading
@@ -11,6 +13,7 @@ from time_series import TimeSeries
 FPS = 30
 DELAY = 0
 logger = logging.getLogger(__name__)
+
 
 class DetectionResult:
     def __init__(self, src_url:str = None, time:datetime.datetime = None, results: list = None):
@@ -43,6 +46,9 @@ class Drawer(threading.Thread):
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.buffer = FrameBuffer(100, self.height, self.width, 3)
         self.results = TimeSeries()
+        self.frame = None
+        self.frame_ready = False
+        self.reading = True
 
     def draw_bounding_boxes(self, frame, results):
         if results is None:
@@ -80,20 +86,27 @@ class Drawer(threading.Thread):
 
         # using subprocess and pipe to fetch frame data
         p = subprocess.Popen(command, stdin=subprocess.PIPE)
-        while True:
-            if missed_frames == 30:
-                break
-            # while cap.isOpened():
-            ret, frame = self.cap.read()
-            if not ret:
-                print("frame read failed")
-                missed_frames += 1
-                break
-
-            # YOUR CODE FOR PROCESSING FRAME HERE
-
-            # write to pipe
-            p.stdin.write(self.process(frame).tobytes())
+        self.read_continuous()
+        i = 0
+        total_time = datetime.timedelta(seconds=0)
+        max_process_time = datetime.timedelta(seconds=0)
+        while self.reading:
+            if not self.frame_ready:
+                time.sleep(0.01)
+                continue
+            start_time = datetime.datetime.now()
+            result = self.process(self.frame)
+            process_time = datetime.datetime.now() - start_time
+            total_time += process_time
+            if process_time>max_process_time:
+                max_process_time = process_time
+            i += 1
+            if i == 30:
+                logger.warning(f'processed 30 frames from {self.source_url}.\tAvg: {(total_time/30).microseconds/1000000}\tmax: {max_process_time.microseconds/1000000}')
+                total_time = datetime.timedelta(seconds=0)
+                i = 0
+            p.stdin.write(result.tobytes())
+            self.frame_ready = False
         p.kill()
 
     def consume_results(self):
@@ -107,6 +120,7 @@ class Drawer(threading.Thread):
             timestamp = datetime.datetime.fromisoformat(body[1])
             results = eval(body[2])
             self.results.update(results, timestamp)
+            # print(f"{self.source_url} sent result for {timestamp} at {datetime.datetime.now()} delta {(datetime.datetime.now() - timestamp).microseconds})")
             # logger.warning(body)
 
         channel.basic_consume(queue=self.source_url, auto_ack=True, on_message_callback=callback)
@@ -115,6 +129,19 @@ class Drawer(threading.Thread):
     def start_consume(self):
         self.consumer_thread = threading.Thread(target=self.consume_results)
         self.consumer_thread.start()
+
+    def read_continuous(self):
+        def read():
+            while True:
+                # while cap.isOpened():
+                ret, frame = self.cap.read()
+                self.reading = ret
+                if not ret:
+                    print("frame read failed")
+                    break
+                self.frame = frame
+                self.frame_ready = True
+        threading.Thread(target=read, daemon=True).start()
 
 if __name__ == "__main__":
     analyzer = Drawer(source_url="rtmp://192.168.49.2:30000/live/1", output_url="rtmp://192.168.49.2:30000/live/1_a")

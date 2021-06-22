@@ -1,4 +1,5 @@
 import datetime
+import time
 from collections import OrderedDict
 from typing import Union
 
@@ -26,6 +27,8 @@ class TimeSeries:
             return None
         min = 0
         max = len(self.data)
+        if idx > timestamps[-1]:
+            return self[-1]
         while max - min > 1:
             checked = int((min + max)/2)
             if timestamps[checked] > idx:
@@ -33,3 +36,8 @@ class TimeSeries:
             else:
                 min = checked
         return self[min]
+
+ts = TimeSeries()
+ts.update(69)
+time.sleep(1)
+print(ts[datetime.datetime.now()])
