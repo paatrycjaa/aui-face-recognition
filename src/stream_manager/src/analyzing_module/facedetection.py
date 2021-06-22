@@ -10,10 +10,12 @@ REQUIRED_SIZE = (224,224)
 
 class FaceDetection:
 
-    def __init__(self, opencv = False, identification = True):
+    def __init__(self, opencv = False, identification = True, scaleFactor = 1.1, minNeighbours = 3):
         self._detector = None
         self._opencv = opencv
         self._identification = identification
+        self._scaleFactor = scaleFactor
+        self._minNeighbours = minNeighbours
         if self._opencv:
             self._detector = cv2.CascadeClassifier('analyzing_module/haarcascade_frontalface_default.xml')
         else:
@@ -25,7 +27,7 @@ class FaceDetection:
 
     def _find_faces(self, frame):
         if self._opencv: 
-            results = self._detector.detectMultiScale(frame)
+            results = self._detector.detectMultiScale(frame, self._scaleFactor, self._minNeighbours)
             res = []
             for result in results:
                 x1, y1, width, height = result
@@ -89,7 +91,7 @@ class FaceDetection:
     def perform_face_detection(self, frame):
 
         results = self._find_faces(frame)
-        self.draw_bounding_boxes(frame,results)
+        #self.draw_bounding_boxes(frame,results)
         if self._identification == True :
             faces = self._extract_faces(frame, results)
             predictions = self._recognize_face(faces)

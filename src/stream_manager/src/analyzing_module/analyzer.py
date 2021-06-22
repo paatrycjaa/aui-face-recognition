@@ -7,6 +7,7 @@ import cv2
 from analyzing_module.facedetection import FaceDetection
 import logging
 from celery import Celery
+from conf_parser import ConfParser
 
 BROKER_URL = '192.168.49.2'
 BROKER_PORT = 30762
@@ -17,6 +18,7 @@ FPS = 30
 DELAY = 0.5
 
 logger = logging.getLogger(__name__)
+CONF_PATH = 'config.conf'
 
 
 class DetectionResult:
@@ -46,7 +48,9 @@ class Analyzer(threading.Thread):
         self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.model = FaceDetection(opencv=False, identification=True)
+        self.model_parameters = ConfParser(CONF_PATH)
+        self.model = FaceDetection(opencv=self.model_parameters['opnecv'], identification=self.model_parameters['identification'],
+                            scaleFactor=self.model_parameters['scaleFactor'], minNeighbours = self.model_parameters['minNeigbours'])
 
         params = pika.ConnectionParameters(host=self.broker_url, port=BROKER_PORT)
         self.connection = pika.BlockingConnection(parameters=params)
