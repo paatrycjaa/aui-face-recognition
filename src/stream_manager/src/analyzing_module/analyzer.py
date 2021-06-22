@@ -46,7 +46,7 @@ class Analyzer(threading.Thread):
         self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.model = FaceDetection(opencv=True, identification=False)
+        self.model = FaceDetection(opencv=False, identification=True)
 
         params = pika.ConnectionParameters(host=self.broker_url, port=BROKER_PORT)
         self.connection = pika.BlockingConnection(parameters=params)
@@ -68,7 +68,7 @@ class Analyzer(threading.Thread):
                 missed_frames += 1
                 break
             missed_frames = 0
-            result = DetectionResult(src_url=self.source_url, time=time, results=self.model.find_faces(frame))
+            result = DetectionResult(src_url=self.source_url, time=time, results=self.model.perform_face_detecion(frame))
             total_duration += datetime.datetime.now()-time
             self.channel.basic_publish(exchange='', routing_key=self.source_url, body=str(result))
             i += 1
