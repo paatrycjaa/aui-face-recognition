@@ -1,15 +1,13 @@
 import datetime
 import cv2
-
-time = datetime.datetime.now()
+import time
 
 cap = cv2.VideoCapture('rtmp://192.168.49.2:30000/live/1')
-print(datetime.datetime.now()-time)
 
 while True:
     # Capture frame-by-frame
     ret, frame = cap.read()
-
+    time.sleep(1/30)
     # Our operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 

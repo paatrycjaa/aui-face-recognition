@@ -17,7 +17,7 @@ api = Api(app)
 class Manager(Resource):
     def get(self):
         # stream_manager.update_urls()
-        result = stream_manager.get_stream_urls()
+        result = stream_manager.get_handlers()
         return jsonify(result)
 
     def post(self):
@@ -28,6 +28,12 @@ class Manager(Resource):
 class Status(Resource):
     def get(self):
         return "online"
+
+
+@api.route('/heartbeat/<url>')
+class Heartbeat(Resource):
+    def post(self, url):
+        stream_manager.heartbeat_analysis(url)
 
 
 if __name__ == '__main__':
