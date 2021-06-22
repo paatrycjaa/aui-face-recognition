@@ -9,6 +9,7 @@ import threading
 import cv2
 from frame_buffer import FrameBuffer
 from time_series import TimeSeries
+import json
 
 FPS = 30
 DELAY = 0
@@ -49,6 +50,7 @@ class Drawer(threading.Thread):
         self.frame = None
         self.frame_ready = False
         self.reading = True
+        self.stats = []
 
     def draw_bounding_boxes(self, frame, results):
         if results is None:
@@ -63,10 +65,10 @@ class Drawer(threading.Thread):
         self.buffer.update(frame)
         result = self.results[datetime.datetime.now()-datetime.timedelta(seconds=DELAY)]
         if result is None:
-            return frame
+            return frame, 0
         frame = self.buffer[int(DELAY*FPS)]
         self.draw_bounding_boxes(frame, result)
-        return frame
+        return frame, len(result)
 
     def run(self):
         missed_frames = 0
@@ -88,22 +90,22 @@ class Drawer(threading.Thread):
         p = subprocess.Popen(command, stdin=subprocess.PIPE)
         self.read_continuous()
         i = 0
-        total_time = datetime.timedelta(seconds=0)
-        max_process_time = datetime.timedelta(seconds=0)
         while self.reading:
             if not self.frame_ready:
                 time.sleep(0.01)
                 continue
             start_time = datetime.datetime.now()
-            result = self.process(self.frame)
-            process_time = datetime.datetime.now() - start_time
-            total_time += process_time
-            if process_time>max_process_time:
-                max_process_time = process_time
+            result, face_count = self.process(self.frame)
+            self.stats.append({'time': str(datetime.datetime.now()),
+                               'process_time': (datetime.datetime.now() - start_time).microseconds,
+                               'face_count': face_count,
+                               'resolution': (self.frame.shape[0], self.frame.shape[1])})
             i += 1
-            if i == 30:
-                logger.warning(f'processed 30 frames from {self.source_url}.\tAvg: {(total_time/30).microseconds/1000000}\tmax: {max_process_time.microseconds/1000000}')
-                total_time = datetime.timedelta(seconds=0)
+            if i == 300:
+                now = datetime.datetime.now()
+                with open(f'log-{self.source_url.split("/")[-1]}-{now.hour}:{now.minute}:{now.second}.txt', 'w+') as log_file:
+                    json.dump(self.stats, log_file, indent=2)
+                self.stats = []
                 i = 0
             p.stdin.write(result.tobytes())
             self.frame_ready = False

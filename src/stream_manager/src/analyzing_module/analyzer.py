@@ -1,5 +1,6 @@
 import copy
 import datetime
+import json
 import time
 import numpy as np
 import pika
@@ -57,28 +58,34 @@ class Analyzer(threading.Thread):
         self.frame = None
         self.reading = True
         self.frame_ready = False
+        self.stats = []
 
     def run(self):
         i = 0
-        total_duration = datetime.timedelta(seconds=0)
         self.read_continuous()
         while self.reading:
             if not self.frame_ready or self.frame.shape[0] < 10:
                 time.sleep(0.01)
                 continue
-            # frame = copy.deepcopy(self.frame)
             start_time = datetime.datetime.now()
             # cv2.imshow('frame', self.frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     break
             result = DetectionResult(src_url=self.source_url, time=start_time, results=self.model.find_faces(self.frame))
-            total_duration += datetime.datetime.now() - start_time
             self.channel.basic_publish(exchange='', routing_key=self.source_url, body=str(result))
+
+            self.stats.append({'time': str(datetime.datetime.now()),
+                               'process_time': (datetime.datetime.now() - start_time).microseconds,
+                               'face_count': len(result.results),
+                               'resolution': (self.frame.shape[0], self.frame.shape[1])})
             i += 1
-            if i == 30:
-                requests.post(f'http://0.0.0.0:5001/heartbeat/{self.source_url.split("/")[-1]}')
-                logger.warning(f'analyzed 30 frames with avg analysis time {total_duration / 30}')
-                total_duration = datetime.timedelta(seconds=0)
+            if i == 300:
+                now = datetime.datetime.now()
+                filename = f'log-{self.source_url.split("/")[-1]}-{now.hour}:{now.minute}:{now.second}.txt'
+                logger.warning(f"saving logs to {filename}")
+                with open(filename, 'w+') as log_file:
+                    json.dump(self.stats, log_file, indent=2)
+                self.stats = []
                 i = 0
             self.frame_ready = False
 
