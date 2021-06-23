@@ -52,7 +52,7 @@ class StreamManager:
         self.do_update = True
         self.analysis_config = {
             'opencv': True,
-            'identification': False,
+            'identification': True,
             'scaleFactor': 1.05,
             'minNeighbours': 6
         }

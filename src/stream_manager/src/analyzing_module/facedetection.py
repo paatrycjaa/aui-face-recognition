@@ -1,3 +1,5 @@
+import logging
+
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
 from keras_vggface.utils import decode_predictions
@@ -5,6 +7,7 @@ import mtcnn
 import cv2
 import numpy as np
 
+logger = logging.getLogger(__name__)
 
 REQUIRED_SIZE = (224,224)
 
@@ -47,13 +50,13 @@ class FaceDetection:
     
     def _extract_faces(self, frame, results):
         faces = []
-        for result in results :
+        for result in results:
             x1 = result[0]
             y1 = result[1]
             x2 = x1 + result[2]
             y2 = y1 + result[3]
+            logger.warning(f'{x1}\t{y1}\t{x2}\t{y2}')
             face = cv2.resize(frame[y1:y2, x1:x2], REQUIRED_SIZE)
-            # print(x1,y1,x2,y2)
             faces.append(face)
         
         return faces
@@ -95,9 +98,10 @@ class FaceDetection:
         #self.draw_bounding_boxes(frame,results)
         if self._identification == True :
             faces = self._extract_faces(frame, results)
-            predictions = self._recognize_face(faces)
-            labels = self._choose_right_predictions(predictions)
-            results = self._concatanate_results(labels, results)
+            if faces:
+                predictions = self._recognize_face(faces)
+                labels = self._choose_right_predictions(predictions)
+                results = self._concatanate_results(labels, results)
         
         return results
     

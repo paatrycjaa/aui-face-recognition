@@ -13,7 +13,7 @@ from time_series import TimeSeries
 import json
 
 FPS = 30
-DELAY = 0
+DELAY = 1
 logger = logging.getLogger(__name__)
 
 
@@ -61,6 +61,8 @@ class Drawer(threading.Thread):
             x2 = x1 + width
             y2 = y1 + height
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255))
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(frame, name, (x1, y1), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
     def process(self, frame: np.array):
         self.buffer.update(frame)
