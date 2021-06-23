@@ -41,5 +41,7 @@ if __name__ == '__main__':
         stream_manager.rtmp_url = sys.argv[1]
     if len(sys.argv) > 2:
         stream_manager.analyzer_url = sys.argv[2]
+    if len(sys.argv) > 3:
+        stream_manager.manager_url = sys.argv[3]
     stream_manager.start()
     app.run(host='0.0.0.0', port=5001)

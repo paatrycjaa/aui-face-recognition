@@ -16,7 +16,7 @@ spec:
       - name: stream-manager
         image: pawelzakieta/aui:stream-manager
         command: ["python3"]
-        args: ["manager_api.py", "rtmp://nginx-rtmp:1935/live/", "http://analyzer:5000/"]
+        args: ["manager_api.py", "rtmp://nginx-rtmp:1935/live/", "http://analyzer:5000/", "http://manager:5001"]
         ports:
         - containerPort: 5001
           name: http

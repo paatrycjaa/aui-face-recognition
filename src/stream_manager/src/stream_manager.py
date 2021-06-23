@@ -43,12 +43,14 @@ class StreamManager:
         self.analyzer_url = 'http://127.0.0.1:5000/'
         self.broker_url = '192.168.49.2'
         self.drawer_url = 'http://127.0.0.1:5004/'
+        self.manager_url = 'http://localhost:5001'
         self.broker_port = 30762
         self.interval = 5
         self.remove_after = 20
         self.update_worker = None
         self.consumer_worker = None
         self.do_update = True
+
 
     def get_handled_urls(self):
         return [handler.source_url for handler in self.stream_handlers]
@@ -129,7 +131,9 @@ class StreamManager:
             url = f'{self.rtmp_url}{seed}'
         worker = analyzer.analyze.delay(source_url=url,
                                         broker_url=self.broker_url,
-                                        broker_port=self.broker_port)
+                                        broker_port=self.broker_port,
+                                        manager_url=self.manager_url
+                                        )
         self._add_stream_url(url, worker)
         return seed
 
