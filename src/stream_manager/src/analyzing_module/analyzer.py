@@ -9,7 +9,7 @@ import cv2
 from analyzing_module.facedetection import FaceDetection
 import logging
 from celery import Celery
-from conf_parser import ConfParser
+from analyzing_module.conf_parser import ConfParser
 import requests
 
 BROKER_URL = '192.168.49.2'
@@ -21,7 +21,7 @@ FPS = 30
 DELAY = 0.5
 
 logger = logging.getLogger(__name__)
-CONF_PATH = 'config.conf'
+CONF_PATH = 'analyzing_module/config.conf'
 
 
 class DetectionResult:
@@ -52,8 +52,8 @@ class Analyzer(threading.Thread):
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.model_parameters = ConfParser(CONF_PATH)
-        self.model = FaceDetection(opencv=self.model_parameters['opnecv'], identification=self.model_parameters['identification'],
-                            scaleFactor=self.model_parameters['scaleFactor'], minNeighbours = self.model_parameters['minNeigbours'])
+        self.model = FaceDetection(opencv=self.model_parameters['opencv'], identification=self.model_parameters['identification'],
+                            scaleFactor=self.model_parameters['scaleFactor'], minNeighbours = self.model_parameters['minNeighbours'])
 
         params = pika.ConnectionParameters(host=self.broker_url, port=BROKER_PORT)
         self.connection = pika.BlockingConnection(parameters=params)
@@ -75,7 +75,7 @@ class Analyzer(threading.Thread):
             # cv2.imshow('frame', self.frame)
             # if cv2.waitKey(1) & 0xFF == ord('q'):
             #     break
-            result = DetectionResult(src_url=self.source_url, time=start_time, results=self.model.find_faces(self.frame))
+            result = DetectionResult(src_url=self.source_url, time=start_time, results=self.model.perform_face_detection(self.frame))
             self.channel.basic_publish(exchange='', routing_key=self.source_url, body=str(result))
 
             self.stats.append({'time': str(datetime.datetime.now()),
@@ -132,7 +132,7 @@ def analyze(source_url, broker_url, broker_port):
 
 
 if __name__ == "__main__":
-    result = analyze.delay(source_url='rtmp://192.168.49.2:30000/live/1',
+    result = analyze(source_url='rtmp://192.168.49.2:30000/live/1',
             broker_url='192.168.49.2',
             broker_port=30762)
     while True:

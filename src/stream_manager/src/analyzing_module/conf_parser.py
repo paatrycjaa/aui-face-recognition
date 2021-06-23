@@ -9,6 +9,7 @@ class ConfParser() :
         self._config_path = config_path
         self._config = configparser.ConfigParser()
         self._parameters = {}
+        self._readConfig()
 
     def _readConfig(self) :
         try:
@@ -16,8 +17,8 @@ class ConfParser() :
         except Exception as e :
             print(str(e))
         
-        self._parameters['opencv'] = self._config.get('model', 'opencv')
-        self._parameters['identification'] = self._config.get('model', 'identification')
+        self._parameters['opencv'] = eval(self._config.get('model', 'opencv'))
+        self._parameters['identification'] = eval(self._config.get('model', 'identification'))
         self._parameters['scaleFactor'] = self._config.get('model', 'scaleFactor')
         self._parameters['minNeighbours'] = self._config.get('model', 'minNeighbours')
 
@@ -42,3 +43,6 @@ class ConfParser() :
             return False
         
         return True
+
+    def __getitem__(self, item):
+        return self._parameters[item]

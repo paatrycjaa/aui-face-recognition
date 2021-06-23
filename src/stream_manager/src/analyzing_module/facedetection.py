@@ -53,6 +53,7 @@ class FaceDetection:
             x2 = x1 + result[2]
             y2 = y1 + result[3]
             face = cv2.resize(frame[y1:y2, x1:x2], REQUIRED_SIZE)
+            # print(x1,y1,x2,y2)
             faces.append(face)
         
         return faces
