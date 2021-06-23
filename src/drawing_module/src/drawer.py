@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import subprocess
 import time
 
@@ -103,7 +104,11 @@ class Drawer(threading.Thread):
             i += 1
             if i == 300:
                 now = datetime.datetime.now()
-                with open(f'log-{self.source_url.split("/")[-1]}-{now.hour}:{now.minute}:{now.second}.txt', 'w+') as log_file:
+                if not os.path.isdir('logs'):
+                    os.mkdir('logs')
+                filename = f'logs/log-{self.source_url.split("/")[-1]}-{now.hour}:{now.minute}:{now.second}.txt'
+                logger.warning(f"saving logs to {filename}")
+                with open(filename, 'w+') as log_file:
                     json.dump(self.stats, log_file, indent=2)
                 self.stats = []
                 i = 0

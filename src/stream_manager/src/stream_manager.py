@@ -50,6 +50,12 @@ class StreamManager:
         self.update_worker = None
         self.consumer_worker = None
         self.do_update = True
+        self.analysis_config = {
+            'opencv': True,
+            'identification': False,
+            'scaleFactor': 1.05,
+            'minNeighbours': 6
+        }
 
 
     def get_handled_urls(self):
@@ -132,7 +138,8 @@ class StreamManager:
         worker = analyzer.analyze.delay(source_url=url,
                                         broker_url=self.broker_url,
                                         broker_port=self.broker_port,
-                                        manager_url=self.manager_url
+                                        manager_url=self.manager_url,
+                                        analysis_config=self.analysis_config
                                         )
         self._add_stream_url(url, worker)
         return seed

@@ -1,6 +1,7 @@
 import copy
 import datetime
 import json
+import os
 import time
 import numpy as np
 import pika
@@ -42,7 +43,7 @@ class DetectionResult:
 
 
 class Analyzer(threading.Thread):
-    def __init__(self, source_url, manager_url='http://localhost:5001'):
+    def __init__(self, source_url, manager_url='http://localhost:5001', analysis_config=None):
         super().__init__()
         self.source_url = source_url
         self.broker_url = BROKER_URL
@@ -51,7 +52,10 @@ class Analyzer(threading.Thread):
         self.fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.model_parameters = ConfParser(CONF_PATH)
+        if analysis_config is None:
+            self.model_parameters = ConfParser(CONF_PATH)
+        else:
+            self.model_parameters = analysis_config
         self.model = FaceDetection(opencv=self.model_parameters['opencv'],
                                    identification=self.model_parameters['identification'],
                                    scaleFactor=self.model_parameters['scaleFactor'],
@@ -96,7 +100,9 @@ class Analyzer(threading.Thread):
                 now = datetime.datetime.now()
                 filename = f'log-{self.source_url.split("/")[-1]}-{now.hour}:{now.minute}:{now.second}.txt'
                 logger.warning(f"saving logs to {filename}")
-                with open(filename, 'w+') as log_file:
+                if not os.path.isdir('logs'):
+                    os.mkdir('logs')
+                with open('logs/'+filename, 'w+') as log_file:
                     json.dump(self.stats, log_file, indent=2)
                 self.stats = []
                 i = 0
@@ -122,7 +128,7 @@ class Analyzer(threading.Thread):
 
 
 @app.task
-def analyze(source_url, broker_url, broker_port, manager_url='http://localhost:5001'):
+def analyze(source_url, broker_url, broker_port, manager_url='http://localhost:5001', analysis_config=None):
     """
     performs analysis on stream available under source_url and sends results to broker_url
     Args:
@@ -135,7 +141,7 @@ def analyze(source_url, broker_url, broker_port, manager_url='http://localhost:5
 
     """
     logger.error(source_url)
-    analyzer = Analyzer(source_url=source_url, manager_url=manager_url)
+    analyzer = Analyzer(source_url=source_url, manager_url=manager_url, analysis_config=analysis_config)
     analyzer.broker_url = broker_url
     analyzer.broker_port = broker_port
     analyzer.run()
