@@ -1,4 +1,5 @@
 # aui-face-recognition
+![aui-architecture](https://user-images.githubusercontent.com/44137780/127741211-05409bbc-465d-419f-9bb7-fb10a7657edc.png)
 
 
 ### Face detection
