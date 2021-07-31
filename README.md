@@ -8,7 +8,7 @@ Application for face recognition on video streaming
 
 ### Face detection
 ```
-cd analyzing_module
+cd src/stream_manager/src/analyzing_module
 python3 -m venv /venv   (python 3.8.5 working)
 source venv/bin/activate
 pip install tensorflow
